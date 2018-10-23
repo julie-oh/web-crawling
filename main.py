@@ -7,8 +7,10 @@ import csv
 from get_low_price import get_low_price
 from emailer import send_mail
 
+
 def main():
-    date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
+    seoul_timezone = datetime.timezone(datetime.timedelta(hours=9))
+    date = datetime.datetime.now(tz=seoul_timezone).strftime('%Y-%m-%d %H:%M')
     csv_file = 'low_price_list.csv'
     re = []
 
