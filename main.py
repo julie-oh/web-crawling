@@ -1,4 +1,5 @@
 import os
+import json
 import datetime
 import csv
 from get_low_price import get_low_price
@@ -42,9 +43,10 @@ def main():
 
     if len(diff_dic) > 0:
         print('Sending mail:')
-        # TODO
-        # put on your address
-        send_mail(None, diff_dic, None, None)
+        # read email-related configuration from file
+        with open('email.json', 'r') as jsonf:
+            email_config = json.load(jsonf)  # dict
+        send_mail(email_config['to'], diff_dic, email_config['id'], email_config['pwd'])
 
 
 if __name__ == '__main__':
