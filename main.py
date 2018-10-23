@@ -1,10 +1,11 @@
+from time import sleep
+import random
 import os
 import json
 import datetime
 import csv
 from get_low_price import get_low_price
 from emailer import send_mail
-
 
 def main():
     date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
@@ -16,15 +17,16 @@ def main():
         for line in lines:
            re.append(get_low_price(line.strip(), date))
 
-    is_compare = os.path.exists('./low_price_list.csv')
+    is_exists = os.path.exists('./low_price_list.csv')
     previous_dic = {}
     diff_dic = {}
 
-    with open(csv_file, newline='') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            key = row['product_name']
-            previous_dic[key] = row
+    if is_exists:
+        with open(csv_file, newline='') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                key = row['product_name']
+                previous_dic[key] = row
 
     with open(csv_file, 'w', encoding='utf-8', newline='') as f:
         fieldnames = ['date','product_name', 'low_price', 'product_link']
@@ -50,5 +52,6 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
-
+    while True:
+        main()
+        sleep(random.randrange(2000, 3600))
