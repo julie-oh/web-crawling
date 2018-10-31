@@ -4,8 +4,13 @@ import os
 import json
 import datetime
 import csv
+import pandas as pd
 from get_low_price import get_low_price
 from emailer import send_mail
+
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import db
 
 
 def main():
@@ -14,10 +19,20 @@ def main():
     csv_file = 'low_price_list.csv'
     re = []
 
-    with open('./url_list.txt', 'r') as f:
-        lines = f.readlines()
-        for line in lines:
-           re.append(get_low_price(line.strip(), date))
+    # read configuration
+    with open('config.json', 'r') as jsonf:
+        config = json.load(jsonf)  # dict
+
+    cred = credentials.Certificate(config['db_api_key'])
+    firebase_admin.initialize_app(cred, {
+        'databaseURL': config['db_address']
+    })
+
+    sales = db.reference(config['db_ref'])
+    get_db = sales.get()
+
+    for i in get_db:
+        re.append(get_low_price(get_db[i]['url'],date))
 
     is_exists = os.path.exists('./low_price_list.csv')
     previous_dic = {}
@@ -45,12 +60,19 @@ def main():
                     diff_dic[product_name] = item
                     diff_dic[product_name]['previous_price'] = pre_price
 
+    make_excel()
+
     if len(diff_dic) > 0:
         print('Sending mail:')
         # read email-related configuration from file
-        with open('email.json', 'r') as jsonf:
-            email_config = json.load(jsonf)  # dict
-        send_mail(email_config['to'], diff_dic, email_config['id'], email_config['pwd'])
+        send_mail(config['to'], diff_dic, config['id'], config['pwd'])
+
+
+def make_excel():
+    df_new = pd.read_csv('./low_price_list.csv')
+    writer = pd.ExcelWriter('low_price.xlsx')
+    df_new.to_excel(writer, index=False)
+    writer.save()
 
 
 if __name__ == '__main__':
